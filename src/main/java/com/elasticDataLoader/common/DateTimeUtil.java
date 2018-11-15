@@ -41,6 +41,18 @@ public class DateTimeUtil {
     }
 
     /**
+     * validates if the fileName is compliant
+     *
+     * @param fileNameString
+     * @return Boolean
+     */
+    public static Boolean isAValidFileFormat(String fileNameString){
+
+        return getDateTimeFromFileString(fileNameString)!=null;
+
+    }
+
+    /**
      *
      * @param localDateTime
      * @return int

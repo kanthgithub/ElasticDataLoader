@@ -1,12 +1,13 @@
 package com.elasticDataLoader.service;
 
+import com.elasticDataLoader.common.DateTimeUtil;
 import com.elasticDataLoader.common.FileReaderUtil;
+import com.elasticDataLoader.repository.FileDataRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -15,7 +16,9 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
+import static com.elasticDataLoader.common.DateTimeUtil.isAValidFileFormat;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 
 @Service
@@ -24,6 +27,9 @@ public class FileWatcherService implements InitializingBean{
     Logger log = LoggerFactory.getLogger(FileWatcherService.class);
 
     private WatchService fileWatchService;
+
+    @Autowired
+    FileDataRepository fileDataRepository;
 
 
     @Autowired
@@ -49,6 +55,29 @@ public class FileWatcherService implements InitializingBean{
 
     }
 
+
+
+    @Override
+    public void afterPropertiesSet()  {
+
+        fileDataRepository.deleteAll();
+
+        processAllFilesInDirectory();
+
+        fixedThreadPool.submit(new Runnable() {
+            /**
+             * Computes a result, or throws an exception if unable to do so.
+             *
+             * @throws Exception if unable to compute a result
+             */
+            @Override
+            public void run()  {
+                watchForLogFiles();
+            }
+        });
+
+    }
+
     @PreDestroy
     public void destroy(){
 
@@ -56,6 +85,7 @@ public class FileWatcherService implements InitializingBean{
 
             try {
                 fileWatchService.close();
+                fixedThreadPool.shutdown();
             } catch (IOException e) {
                log.error("error while closing FileWatchService",e);
             }
@@ -66,7 +96,6 @@ public class FileWatcherService implements InitializingBean{
     /**
      *
      */
-    @Async
     public void watchForLogFiles() {
 
         try {
@@ -106,18 +135,9 @@ public class FileWatcherService implements InitializingBean{
                             // the resolved name is "test/foo".
                             child = directoryPath.resolve(filename);
 
-                            List<String> lines = FileReaderUtil.readFileTextToLines(child);
+                            processFileData(child);
 
-                            log.info("lines read are: {} ",lines);
-
-                            fileDataProcessingService.processFileData(lines);
-
-                            log.info("file content as lines: {}",lines);
-
-                        } catch (IOException x) {
-                            log.error("Error while reading File Contents: {}",filename,x);
-                            continue;
-                        }catch (Exception x) {
+                        } catch (Exception x) {
                             log.error("Error while reading File Contents: {}",filename,x);
                             continue;
                         }
@@ -135,21 +155,76 @@ public class FileWatcherService implements InitializingBean{
 
     }
 
+    private Boolean processFileData(Path child) {
 
-    @Override
-    public void afterPropertiesSet()  {
+        String fileName = child.toFile().getName();
 
-        fixedThreadPool.submit(new Runnable() {
-            /**
-             * Computes a result, or throws an exception if unable to do so.
-             *
-             * @throws Exception if unable to compute a result
-             */
-            @Override
-            public void run()  {
-                watchForLogFiles();
+        Boolean isSuccessful = Boolean.TRUE;
+
+        log.info("processing FileData : {}",fileName);
+
+        try {
+            if (isAValidFileFormat(fileName)) {
+
+                log.info("fileName picked (for processing check) : {}", fileName);
+
+                int hourUnit = DateTimeUtil.getHourUnitFromString(fileName);
+
+                if (hourUnit <= 24) {
+
+                    log.info("fileName picked for processing: {}", fileName);
+
+                    List<String> lines = null;
+
+                    lines = FileReaderUtil.readFileTextToLines(child);
+
+                    log.info("lines read are: {} ", lines);
+
+                    fileDataProcessingService.processFileData(lines);
+
+                    log.info("file content as lines: {}", lines);
+                } else {
+                    log.info("Ignored processing for file: {} - as file is older than 24 hours", fileName);
+                }
+            }else{
+                log.warn("intercepted file with non-compliant fileName - ignoring fileProcessing for:{}",fileName);
             }
-        });
 
+        } catch(IOException x){
+            log.error("Error while reading File Contents: {}", fileName, x);
+        }catch(Exception e){
+            log.error("Exception caught while processing file: {} in directory: {}", fileName, fileDataDirectory);
+            isSuccessful = Boolean.FALSE;
+        }
+
+        return isSuccessful;
     }
+
+
+    public void processAllFilesInDirectory() {
+
+        try {
+            Path directoryPath = Paths.get(fileDataDirectory);
+
+            log.info("directoryPath for pre-processing: {}", directoryPath);
+
+            List<Path> files = Files.walk(directoryPath)
+                    .filter(Files::isRegularFile).collect(Collectors.toList());
+
+            log.info("identified files: {}",files);
+
+            for(Path file : files){
+
+                log.info("about to process pending file: {}",file);
+
+                processFileData(file);
+            }
+
+        }catch (Exception ex){
+            log.error("Exception caught while processing pending files in directory: {}",fileDataDirectory);
+        }
+    }
+
+
+
 }
