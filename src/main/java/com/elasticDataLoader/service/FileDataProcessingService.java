@@ -16,6 +16,18 @@ import static com.elasticDataLoader.common.DateTimeUtil.getCurrentTimeStampInEpo
 import static com.elasticDataLoader.common.StringFrequencyUtil.getStringContentFromLogString;
 import static com.elasticDataLoader.common.StringFrequencyUtil.getTimeStampInEpochFromLogString;
 
+
+/**
+ *
+ * Service to process File Data:
+ *
+ * Step-1: parse File Data as lines
+ * Step-2: split lines in to words and associated log-stamp
+ * Step-3: save to elastic-search engine in parallel mode
+ *
+ * parse, split and persistence are performed in parallel mode
+ *
+ */
 @Service
 public class FileDataProcessingService {
 
@@ -25,6 +37,11 @@ public class FileDataProcessingService {
     private FileDataRepository fileDataRepository;
 
     /**
+     *
+     * parse File Data as lines, split lines in to words and associated log-stamp
+     * save to elastic-search engine in parallel mode
+     *
+     * parse, split and persistence are performed in parallel mode
      *
      * @param fileLines
      * @return  List<FileData>
@@ -47,6 +64,8 @@ public class FileDataProcessingService {
 
 
     /**
+     *
+     * convert FileData (lines) to a collection of FileData entities
      *
      * @param line
      * @return FileData
