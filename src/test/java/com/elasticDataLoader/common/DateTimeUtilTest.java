@@ -88,7 +88,7 @@ public class DateTimeUtilTest {
         int hours = 4;
 
         //when
-        Long pastTimeInEpoch = getPastTimeInEpochMillis(hours);
+        Long pastTimeInEpoch = convertPastTimeInHoursToEpochMillis(hours);
 
         //then
         assertNotNull(pastTimeInEpoch);

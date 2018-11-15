@@ -2,13 +2,13 @@ package com.elasticDataLoader.repository;
 
 import com.elasticDataLoader.entity.FileData;
 import org.springframework.data.elasticsearch.annotations.Query;
-import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.data.elasticsearch.repository.ElasticsearchCrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface FileDataRepository extends ElasticsearchRepository<FileData, Integer> , FileDataRepositoryCustom{
+public interface FileDataRepository extends ElasticsearchCrudRepository<FileData, String>, FileDataRepositoryCustom{
 
     /**
      *

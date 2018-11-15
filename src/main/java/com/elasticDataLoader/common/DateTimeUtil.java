@@ -73,6 +73,15 @@ public class DateTimeUtil {
         return instant.toEpochMilli();
     }
 
+    /**
+     *
+     * @return timeStamp in LocalDateTime
+     */
+    public static LocalDateTime getCurrentTimeStamp(){
+
+        return LocalDateTime.now().atOffset(ZONE_OFFSET).toLocalDateTime();
+    }
+
 
     /**
      *
@@ -127,9 +136,21 @@ public class DateTimeUtil {
      * @param deltaHours
      * @return Long (time In Epoch Seconds of pastHour)
      */
-    public static Long getPastTimeInEpochMillis(int deltaHours){
+    public static Long convertPastTimeInHoursToEpochMillis(int deltaHours){
 
         LocalDateTime pastTime = LocalDateTime.now().plusHours(-1 * deltaHours);
+        Instant instant2 = pastTime.toInstant(ZONE_OFFSET);
+        return instant2.toEpochMilli();
+    }
+
+    /**
+     *
+     * @param deltaSeconds
+     * @return Long (time In Epoch Seconds of pastSeconds)
+     */
+    public static Long convertPastTimeInSecondsToEpochMillis(int deltaSeconds){
+
+        LocalDateTime pastTime = LocalDateTime.now().plusHours(-1 * (deltaSeconds/3600));
         Instant instant2 = pastTime.toInstant(ZONE_OFFSET);
         return instant2.toEpochMilli();
     }

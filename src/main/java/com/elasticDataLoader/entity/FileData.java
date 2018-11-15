@@ -5,8 +5,6 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Getter
@@ -19,18 +17,18 @@ import javax.persistence.Id;
 @Document(indexName = "filedatafrequency", type = "fileData")
 public class FileData {
 
+    // Elasticsearch object internal id. Look at field "_id"
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Field(type= FieldType.Long, index = true)
-    private Long id;
+    @Field(type= FieldType.Text)
+    private String id;
 
-    @Field(type= FieldType.Long, index = true)
+    @Field(type= FieldType.Long)
     private Long timestampInEpoch;
 
-    @Field(type= FieldType.Long, index = true)
-    private Long auditTime;
+    @Field(type= FieldType.Long)
+    private Long auditTimeInEpochMillis;
 
-    @Field(type= FieldType.Text, index = true)
+    @Field(type= FieldType.Text, fielddata = true)
     private String content;
 
 }

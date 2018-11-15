@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 0
 
 spring:
   data:
@@ -20,5 +20,5 @@ xpack:
 
 file:
   data:
-    directory: /Users/lakshmikanth/Desktop/Pocketmath
+    directory: /Users/lakshmikanth/Desktop/pocket
 

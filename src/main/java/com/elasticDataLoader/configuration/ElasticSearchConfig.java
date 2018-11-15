@@ -5,6 +5,8 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -21,6 +23,8 @@ import java.net.InetAddress;
 @EnableElasticsearchRepositories(basePackages = "com.elasticDataLoader.repository")
 @ComponentScan(basePackages = { "com.elasticDataLoader" })
 public class ElasticSearchConfig {
+
+    Logger log = LoggerFactory.getLogger(ElasticSearchConfig.class);
 
     @Value("${spring.data.elasticsearch.host}")
     private String esHost;
@@ -47,7 +51,6 @@ public class ElasticSearchConfig {
 
     }
 
-    //@Bean
     public Client embeddedClient() throws  Exception{
 
         EmbeddedElastic embeddedElastic = EmbeddedElastic.builder()
@@ -60,9 +63,29 @@ public class ElasticSearchConfig {
         return embeddedElastic.createClient();
     }
 
+    /*@Bean
+    public ElasticsearchOperations elasticsearchTemplate() throws Exception {
+        log.info("elasticsearchTemplate building initiated");
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        log.info("elasticsearchTemplate building in progress with {}",objectMapper);
+        ElasticsearchTemplate elasticsearchTemplate =
+                new ElasticsearchTemplate(client(), new CustomEntityMapper(objectMapper));
+        log.info("elasticsearchTemplate build completed with {}",objectMapper);
+
+        return elasticsearchTemplate;
+    }*/
+
+
     @Bean
     public ElasticsearchOperations elasticsearchTemplate() throws Exception {
-        return new ElasticsearchTemplate(client());
-    }
+        log.info("elasticsearchTemplate building initiated");
 
+        ElasticsearchTemplate elasticsearchTemplate =
+                new ElasticsearchTemplate(client());
+        log.info("elasticsearchTemplate build completed");
+
+        return elasticsearchTemplate;
+    }
 }

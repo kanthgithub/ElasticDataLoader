@@ -1,6 +1,5 @@
 package com.elasticDataLoader.service;
 
-import com.elasticDataLoader.common.DateTimeUtil;
 import com.elasticDataLoader.entity.FileData;
 import com.elasticDataLoader.repository.FileDataRepository;
 import org.slf4j.Logger;
@@ -8,9 +7,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static com.elasticDataLoader.common.DateTimeUtil.getCurrentTimeStampInEpochMillis;
 import static com.elasticDataLoader.common.StringFrequencyUtil.getStringContentFromLogString;
 import static com.elasticDataLoader.common.StringFrequencyUtil.getTimeStampInEpochFromLogString;
 
@@ -29,22 +31,16 @@ public class FileDataProcessingService {
      */
     public List<FileData> processFileData(List<String> fileLines){
 
-        List<FileData> fileDataList = fileLines.stream().map(content -> getFileDataFromLine(content)).collect(Collectors.toList());
+        List<FileData> fileDataList = fileLines.stream().map(content -> getFileDataFromLine(content))
+                                        .flatMap(list -> list.stream()).collect(Collectors.toList());
 
         //persist FileData
-        Iterable<FileData> fileDataSaved = saveAll(fileDataList);
+        Iterable<FileData> fileDataSaved = fileDataList.parallelStream().map(fileData -> fileDataRepository.save(fileData))
+                                            .collect(Collectors.toList());
 
         log.info("saved fileData entities: {}",fileDataSaved);
 
         return  fileDataSaved!=null ? fileDataList.stream().collect(Collectors.toList()) : null;
-    }
-
-
-    public List<FileData> saveAll(List<FileData> fileDataList) {
-
-        log.info("saving FileData entities: {}",fileDataList);
-
-        return  fileDataList.stream().map(fileData -> fileDataRepository.save(fileData)).collect(Collectors.toList());
     }
 
 
@@ -53,7 +49,7 @@ public class FileDataProcessingService {
      * @param line
      * @return FileData
      */
-    public FileData getFileDataFromLine(String line){
+    public List<FileData> getFileDataFromLine(String line){
 
         log.info("line : {} being processed for parsing: ",line);
 
@@ -61,15 +57,22 @@ public class FileDataProcessingService {
 
         String stringContent = getStringContentFromLogString(line);
 
-        FileData fileData = new FileData();
+        String[] wordArray = stringContent.split("[ ]+|\n+");
 
+        return Arrays.stream(wordArray).map((word) ->
+                                { return getFileData(timeStampLogInEpoch, word);})
+                .collect(Collectors.toList());
+
+
+    }
+
+    public FileData getFileData(Long timeStampLogInEpoch, String stringContent) {
+        FileData fileData = new FileData();
+        fileData.setId(UUID.randomUUID().toString());
         fileData.setContent(stringContent);
         fileData.setTimestampInEpoch(timeStampLogInEpoch);
-        fileData.setAuditTime(DateTimeUtil.getCurrentTimeStampInEpochMillis());
-
-
+        fileData.setAuditTimeInEpochMillis(getCurrentTimeStampInEpochMillis());
         log.info("fileData entity after parse: {}",fileData);
-
         return fileData;
     }
 

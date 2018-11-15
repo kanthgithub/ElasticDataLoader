@@ -11,8 +11,23 @@ public interface FileDataRepositoryCustom {
      * match by word Content & the timeStamp >= deltaTimeInEpochMillis
      *
      * @param word
-     * @param deltaTimeInEpochMillis
+     * @param deltaTimeInHours
      * @return Collection of FileData Entities
      */
-    public List<FileData> findByContentAndTimeLimit(String word, Long deltaTimeInEpochMillis);
+    public List<FileData> findByContentAndTimeLimit(String word, Long deltaTimeInHours);
+
+    /**
+     *
+     * @param word
+     * @return aggregated count
+     */
+    public Long getStatsAggregationDataByContent(String word);
+
+    /**
+     *
+     * @param word
+     * @param deltaTimeInHours
+     * @return aggregated count
+     */
+    public Long getStatsAggregationDataByContentAndTimeRank(String word, Long deltaTimeInHours);
 }
