@@ -32,11 +32,13 @@ public class FileDataProcessingService {
     public List<FileData> processFileData(List<String> fileLines){
 
         List<FileData> fileDataList = fileLines.stream().map(content -> getFileDataFromLine(content))
-                                        .flatMap(list -> list.stream()).collect(Collectors.toList());
+                                                        .flatMap(list -> list.stream())
+                                                        .collect(Collectors.toList());
 
         //persist FileData
-        Iterable<FileData> fileDataSaved = fileDataList.parallelStream().map(fileData -> fileDataRepository.save(fileData))
-                                            .collect(Collectors.toList());
+        Iterable<FileData> fileDataSaved = fileDataList.parallelStream()
+                                                       .map(fileData -> fileDataRepository.save(fileData))
+                                                       .collect(Collectors.toList());
 
         log.info("saved fileData entities: {}",fileDataSaved);
 
@@ -59,13 +61,19 @@ public class FileDataProcessingService {
 
         String[] wordArray = stringContent.split("[ ]+|\n+");
 
-        return Arrays.stream(wordArray).map((word) ->
-                                { return getFileData(timeStampLogInEpoch, word);})
-                .collect(Collectors.toList());
-
-
+        return Arrays.stream(wordArray).parallel()
+                                       .map((word) -> getFileData(timeStampLogInEpoch, word))
+                                       .collect(Collectors.toList());
     }
 
+    /**
+     *
+     * parse Word extract from line as FileData entity
+     *
+     * @param timeStampLogInEpoch
+     * @param stringContent
+     * @return FileData
+     */
     public FileData getFileData(Long timeStampLogInEpoch, String stringContent) {
         FileData fileData = new FileData();
         fileData.setId(UUID.randomUUID().toString());
