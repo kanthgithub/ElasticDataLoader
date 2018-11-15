@@ -70,7 +70,7 @@ public class FileDataProcessingService {
      * @param line
      * @return FileData
      */
-    public List<FileData> getFileDataFromLine(String line){
+    public List<FileData> getFileDataAsWordsFromLine(String line){
 
         log.info("line : {} being processed for parsing: ",line);
 
@@ -83,6 +83,24 @@ public class FileDataProcessingService {
         return Arrays.stream(wordArray).parallel()
                                        .map((word) -> getFileData(timeStampLogInEpoch, word))
                                        .collect(Collectors.toList());
+    }
+
+    /**
+     *
+     * convert FileData (lines) to a collection of FileData entities
+     *
+     * @param line
+     * @return FileData
+     */
+    public List<FileData> getFileDataFromLine(String line){
+
+        log.info("line : {} being processed for parsing: ",line);
+
+        Long timeStampLogInEpoch = getTimeStampInEpochFromLogString(line);
+
+        String stringContent = getStringContentFromLogString(line);
+
+        return Arrays.asList(getFileData(timeStampLogInEpoch, stringContent));
     }
 
     /**

@@ -3,10 +3,12 @@ package com.elasticDataLoader.repository;
 import com.elasticDataLoader.common.DateTimeUtil;
 import com.elasticDataLoader.entity.FileData;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,6 +118,8 @@ public class FileDataRepositoryImpl implements  FileDataRepositoryCustom {
         ValueCount aggregation = aggregations.get("agg");
         Long count = aggregation.getValue();
 
+        getMatchCountByWordAndTimeRank(word,deltaTimeInHours);
+
         log.info("valueCount extracted: {}",count);
 
         return count;
@@ -136,4 +140,31 @@ public class FileDataRepositoryImpl implements  FileDataRepositoryCustom {
                 .must(QueryBuilders.termQuery("content", word))
                 .must(QueryBuilders.rangeQuery("timestampInEpoch").gte(pastTimeInEpochMillis));
     }
+
+
+    public void getMatchCountByWordAndTimeRank(String word,Long deltaTimeInHours){
+
+        // given
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(getQueryBuilderForContentAndTimeRank(word,deltaTimeInHours))
+                .withSearchType(SearchType.DEFAULT)
+                .withIndices("filedatafrequency").withTypes("fileData")
+                .addAggregation(AggregationBuilders.terms("matchCount").field("content")).build();
+
+        // when
+        Aggregations aggregations = elasticsearchTemplate.query(searchQuery, new ResultsExtractor<Aggregations>() {
+            @Override
+            public Aggregations extract(SearchResponse response) {
+                return response.getAggregations();
+            }
+        });
+
+
+        StringTerms aggregation = aggregations.get("matchCount");
+
+        Long count = aggregation.getSumOfOtherDocCounts();
+
+        log.info("valueCount extracted in getMatchCountByWordAndTimeRank: {}",count);
+    }
+
 }
