@@ -1,11 +1,17 @@
 package com.elasticDataLoader.common;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
 public class DateTimeUtil {
+
+    public static final Logger log = LoggerFactory.getLogger(DateTimeUtil.class);
 
     public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHH");
     public static final ZoneOffset ZONE_OFFSET = ZoneOffset.ofHours(8);
@@ -24,17 +30,28 @@ public class DateTimeUtil {
      */
     public static LocalDateTime getDateTimeFromFileString(String fileName){
 
+        log.info("extracting DateTime for file-name-String: {}",fileName);
+
         LocalDateTime localDateTime = null;
 
         String[] fileSplitString = fileName.split("-");
+
+        log.info("split file-name-String: {}",fileSplitString);
 
         int length = fileSplitString.length;
 
         if(length >0){
 
-            String timeString = fileSplitString[length-1].split("\\.")[0];
+            String[] timeStringSplit = fileSplitString[length-1].split("\\.");
 
-            localDateTime = LocalDateTime.parse(timeString, formatter).atOffset(ZONE_OFFSET).toLocalDateTime();
+            log.info("timeStringSplit for parsing: {}",timeStringSplit);
+
+            String timeString = timeStringSplit!=null && timeStringSplit.length >0 ? timeStringSplit[0] : null;
+
+            log.info("timeString for parsing: {}",timeString);
+
+
+            localDateTime = !StringUtils.isEmpty(timeString) ? LocalDateTime.parse(timeString, formatter).atOffset(ZONE_OFFSET).toLocalDateTime() : null;
         }
 
         return localDateTime;

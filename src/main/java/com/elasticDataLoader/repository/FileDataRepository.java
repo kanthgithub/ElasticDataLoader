@@ -16,7 +16,7 @@ public interface FileDataRepository extends ElasticsearchCrudRepository<FileData
      * @return Collection of FileData Entities
      */
     @Query("{\"bool\": {\"must\": [{\"match\": {\"content\": \"?0\"}}]}}")
-    public List<FileData> finfByContent(String word);
+    public List<FileData> findByContent(String word);
 
     /**
      *

@@ -14,7 +14,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
-import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
 
 import java.net.InetAddress;
 
@@ -51,33 +50,6 @@ public class ElasticSearchConfig {
 
     }
 
-    public Client embeddedClient() throws  Exception{
-
-        EmbeddedElastic embeddedElastic = EmbeddedElastic.builder()
-                .withElasticVersion("2.3.3")
-                .withClusterName(esClusterName)
-                .withPortNumber(esPort)
-                .build()
-                .start();
-
-        return embeddedElastic.createClient();
-    }
-
-    /*@Bean
-    public ElasticsearchOperations elasticsearchTemplate() throws Exception {
-        log.info("elasticsearchTemplate building initiated");
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        log.info("elasticsearchTemplate building in progress with {}",objectMapper);
-        ElasticsearchTemplate elasticsearchTemplate =
-                new ElasticsearchTemplate(client(), new CustomEntityMapper(objectMapper));
-        log.info("elasticsearchTemplate build completed with {}",objectMapper);
-
-        return elasticsearchTemplate;
-    }*/
-
-
     @Bean
     public ElasticsearchOperations elasticsearchTemplate() throws Exception {
         log.info("elasticsearchTemplate building initiated");
@@ -88,4 +60,5 @@ public class ElasticSearchConfig {
 
         return elasticsearchTemplate;
     }
+
 }

@@ -190,10 +190,10 @@ public class FileWatcherService implements InitializingBean{
                 log.warn("intercepted file with non-compliant fileName - ignoring fileProcessing for:{}",fileName);
             }
 
-        } catch(IOException x){
-            log.error("Error while reading File Contents: {}", fileName, x);
-        }catch(Exception e){
-            log.error("Exception caught while processing file: {} in directory: {}", fileName, fileDataDirectory);
+        } catch(IOException ioExceptionObject){
+            log.error("Error while reading File Contents: {}", fileName, ioExceptionObject);
+        }catch(Exception exceptionObject){
+            log.error("Exception caught while processing file: {} in directory: {}", fileName, fileDataDirectory,exceptionObject);
             isSuccessful = Boolean.FALSE;
         }
 

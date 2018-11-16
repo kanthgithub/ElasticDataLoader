@@ -28,7 +28,7 @@ public class FileData {
     @Field(type= FieldType.Long)
     private Long auditTimeInEpochMillis;
 
-    @Field(type= FieldType.Text, fielddata = true)
+    @Field(type= FieldType.Text)
     private String content;
 
 }
