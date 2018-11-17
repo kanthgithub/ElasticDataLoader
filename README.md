@@ -1,15 +1,16 @@
 # ElasticDataLoader
 
-Use Case:
+# Use Case:
 
 Load Log File content to Elastic-Search Engine
 
-Purpose:
+# Purpose:
 
 Full-Text query to be performed to analyse text Data and generate analytics based on text match and timestamps
 
-Tech-Stack:
+# Tech-Stack:
 
+```
 JDK-8 for core programming
 
 Spring-Boot for Service/Repository management and interaction with Elastic-Engine
@@ -17,21 +18,24 @@ Spring-Boot for Service/Repository management and interaction with Elastic-Engin
 Spring-elastic-data manages all dependencies with Elastic-Search Component
 
 Mockito and Junit for Unit-Testing
+```
 
 Embedded-Elastic-Search for Integration Testing
 
-Functional Flow:
+# Functional Flow:
 
+```
 Provides an API endpoint,
 ○ the caller can only send a string of up to 40 characters
 ○ The API shall return a json in this format: ​{“response”: “true|false”}
 If the string appears more than 5 times in the last 24 hours, return​ {“response”: “false”}
 Else
 return ​{“response”: “true”}
+```
 
+# Technical Flow:
 
-Technical Flow:
-
+```
 The log file for the ElasticDataLoader​​ is generated with each row of data in the following format:
 
 {timestamp_in_epoch_millis}, {string}
@@ -45,7 +49,7 @@ Upon the zero-th minute of every hour:
   A new log file that contains the data i​n the last hour​​ will be generated and be placed into the same folder
   The file name format is string-generation-{yyyymmddhh}.log​.
          E.g. the file with name ​string-generation-2018093016.log is a file generated at 1600 hour on 30 Sep, 2018.
-
+```
 
 
 UML:
@@ -75,17 +79,19 @@ File Watcher tests:
 
 
 
-Integration Testing:
+# Integration Testing:
 
+```
 ** Pending
 
 Reason: Embedded Elastic-Engine has issues in compatibility with Spring Dependencies
 
 Followup: Develop a maven plugin which starts/stops the Elastic-Engine for each integration test
+```
 
+# Improvements Required:
 
-Improvements Required:
-
+```
 Cucumber Tests for Scenarios identified in Usecases (Blocked by Embedded Elastic Engine in-compatibility with Spring)
 
 Support for Elastic-Cluster (Multiple elastic nodes across Data-Centers)
@@ -98,12 +104,13 @@ Distributed processing using AKKA - Actor based Programming:
 Pros: Current Systems does parallel processing but it is limited to number of cores/processors in the Machine
 
 By Shifting to Actor based approach, it will become a distributed System and Horizontally Scalable
+```
 
+# Alternative Approaches:
 
-Alternative Approaches:
+# Redisson:
 
-Redisson:
-
+```
 Redis Database is a key-Value based Storage
 
 Redisson is a library/framework to achieve storage and processing in Redis in Distributed way
@@ -111,12 +118,23 @@ Redisson is a library/framework to achieve storage and processing in Redis in Di
 Redisson Library is built on JDK Concurrent utilities (java.util.concurrent)
 
 Distributed Locks, Distributed
+```
 
+# Chronicle-IO:
 
-Chronicle-IO:
-
+```
 Off-Heap Storage mechanism
 
 Offers Mechanical Sympathy where process can be pinned to specific core of machine
 
 Distributed Heap Offers faster read/write mechanisms
+```
+
+# DevOps Improvements:
+
+```
+ - Add Docker configuration
+ - enable/configure Piplelines for Continuous Build, Delivery & Deployment
+ - Use AWS - RDS (Relational Database As a Service) for scalable feature
+ - Push Docker image to AWS and run from AWS
+```
