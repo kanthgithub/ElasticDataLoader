@@ -5,9 +5,9 @@ spring:
   data:
     elasticsearch:
       cluster-name: testCluster
-      cluster-nodes: localhost:9400
+      cluster-nodes: localhost:9300
       host: localhost
-      port: 9400
+      port: 9300
       repositories:
         enabled: true
       properties:

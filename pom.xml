@@ -26,6 +26,11 @@
         <fastjson.version>1.2.47</fastjson.version>
         <jts.version>1.13</jts.version>
         <log4j.version>2.9.1</log4j.version>
+		<skipTests>false</skipTests>
+
+		<!-- For integration tests using ANT -->
+		<integ.http.port>9400</integ.http.port>
+		<integ.transport.port>9500</integ.transport.port>
 	</properties>
 
 	<dependencies>
@@ -155,6 +160,18 @@
             <scope>provided</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>org.elasticsearch.client</groupId>
+			<artifactId>transport</artifactId>
+			<version>${elasticsearch.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.elasticsearch.plugin</groupId>
+			<artifactId>transport-netty4-client</artifactId>
+			<version>${elasticsearch.version}</version>
+		</dependency>
+
 		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -162,12 +179,30 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.elasticsearch.test/framework -->
 		<dependency>
-			<groupId>pl.allegro.tech</groupId>
-			<artifactId>embedded-elasticsearch</artifactId>
-			<version>2.7.0</version>
+			<groupId>org.elasticsearch.test</groupId>
+			<artifactId>framework</artifactId>
+			<version>6.5.0</version>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.mockito/mockito-all -->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>1.9.5</version>
+			<scope>test</scope>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.codelibs</groupId>
+			<artifactId>elasticsearch-cluster-runner</artifactId>
+			<version>5.5.2.0</version>
+			<scope>test</scope>
+		</dependency>
+
 
 	</dependencies>
 
@@ -211,34 +246,6 @@
 				</configuration>
 			</plugin>
 
-			<plugin>
-				<groupId>com.github.alexcojocaru</groupId>
-				<artifactId>elasticsearch-maven-plugin</artifactId>
-				<version>6.0</version> <!--Plugin version-->
-				<configuration>
-					<clusterName>testCluster</clusterName>
-					<transportPort>9500</transportPort>
-					<httpPort>9400</httpPort>
-					<version>6.0.2</version> <!--Elasticsearch version-->
-					<timeout>20</timeout>
-				</configuration>
-				<executions>
-					<execution>
-						<id>start-elasticsearch</id>
-						<phase>pre-integration-test</phase>
-						<goals>
-							<goal>runforked</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>stop-elasticsearch</id>
-						<phase>post-integration-test</phase>
-						<goals>
-							<goal>stop</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 
 		</plugins>
 	</build>

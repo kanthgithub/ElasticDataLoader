@@ -15,7 +15,9 @@ import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.elasticDataLoader.common.DateTimeUtil.isAValidFileFormat;
@@ -26,7 +28,7 @@ public class FileWatcherService implements InitializingBean{
 
     Logger log = LoggerFactory.getLogger(FileWatcherService.class);
 
-    private WatchService fileWatchService;
+    private WatchService watchService;
 
     @Autowired
     FileDataRepository fileDataRepository;
@@ -44,7 +46,7 @@ public class FileWatcherService implements InitializingBean{
     @PostConstruct
     public void init(){
         try {
-            fileWatchService
+            watchService
                 = FileSystems.getDefault().newWatchService();
 
             log.info("initialized FileWatcherService");
@@ -81,10 +83,10 @@ public class FileWatcherService implements InitializingBean{
     @PreDestroy
     public void destroy(){
 
-        if(fileWatchService !=null) {
+        if(watchService !=null) {
 
             try {
-                fileWatchService.close();
+                watchService.close();
                 fixedThreadPool.shutdown();
             } catch (IOException e) {
                log.error("error while closing FileWatchService",e);
@@ -94,7 +96,10 @@ public class FileWatcherService implements InitializingBean{
 
 
     /**
-     *
+     * watch/poll for Log files in configured directory
+     * on a NewFile event, verify and validate the fileName and timeStamp String in fileName
+     * If file is valid and has arrived in 24-hours,
+     * Initiate fileProcessing
      */
     public void watchForLogFiles() {
 
@@ -111,41 +116,29 @@ public class FileWatcherService implements InitializingBean{
             WatchKey key;
 
             while ((key = watchService.take()) != null) {
-                for (WatchEvent<?> event : key.pollEvents()) {
 
-                    log.info(
-                            "Event kind:" + event.kind()
-                                    + ". File affected: " + event.context() + ".");
+                List<WatchEvent<?>> watchEvents = key.pollEvents();
 
-                    if(event.kind().equals(ENTRY_CREATE)){
+                watchEvents.parallelStream().forEach(new Consumer<WatchEvent<?>>() {
+                    @Override
+                    public void accept(WatchEvent<?> watchEvent) {
+                        fixedThreadPool.submit(new Callable<Boolean>() {
 
-                        // The filename is the
-                        // context of the event.
-                        WatchEvent<Path> ev = (WatchEvent<Path>)event;
 
-                        Path filename = ev.context();
-
-                        Path child = null;
-
-                        // Verify that the new
-                        //  file is a text file.
-                        try {
-                            // Resolve the filename against the directory.
-                            // If the filename is "test" and the directory is "foo",
-                            // the resolved name is "test/foo".
-                            child = directoryPath.resolve(filename);
-
-                            processFileData(child);
-
-                        } catch (Exception x) {
-                            log.error("Error while reading File Contents: {}",filename,x);
-                            continue;
-                        }
-
+                            /**
+                             * Computes a result, or throws an exception if unable to do so.
+                             *
+                             * @return computed result
+                             * @throws Exception if unable to compute a result
+                             */
+                            @Override
+                            public Boolean call() throws Exception {
+                                return processWatchEvents(directoryPath,watchEvent);
+                            }
+                        });
                     }
+                });
 
-
-                }
                 key.reset();
             }
         }catch (Exception ex){
@@ -155,6 +148,60 @@ public class FileWatcherService implements InitializingBean{
 
     }
 
+
+    /**
+     *
+     * process File-Watch-Event
+     *
+     * @param directoryPath
+     * @param event
+     * @return result as Boolean
+     */
+    public Boolean processWatchEvents(Path directoryPath,WatchEvent event){
+
+        log.info(
+                "Event kind:" + event.kind()
+                        + ". File affected: " + event.context() + ".");
+
+        Boolean result = Boolean.TRUE;
+
+        if(event.kind().equals(ENTRY_CREATE)) {
+
+            // The filename is the
+            // context of the event.
+            WatchEvent<Path> ev = (WatchEvent<Path>) event;
+
+            Path filename = ev.context();
+
+            Path child = null;
+
+            // Verify that the new
+            //  file is a text file.
+            try {
+                // Resolve the filename against the directory.
+                // If the filename is "test" and the directory is "foo",
+                // the resolved name is "test/foo".
+                child = directoryPath.resolve(filename);
+
+                processFileData(child);
+
+            } catch (Exception x) {
+                log.error("Error while reading File Contents: {}", filename, x);
+                result = Boolean.FALSE;
+            }
+        }
+
+        return result;
+    }
+
+
+    /**
+     *
+     * Process FileData
+     *
+     * @param child
+     * @return Boolean
+     */
     private Boolean processFileData(Path child) {
 
         String fileName = child.toFile().getName();
@@ -200,7 +247,16 @@ public class FileWatcherService implements InitializingBean{
         return isSuccessful;
     }
 
-
+    /**
+     * Process all files in a configured directory
+     *
+     * This is a one-time activity which is triggered on startup
+     *
+     * Step-1: Loop(Parallel) through all files In the directory (parallel Stream for faster processing)
+     *
+     * Step-2: Initiate file Processing for each File
+     *
+     */
     public void processAllFilesInDirectory() {
 
         try {
@@ -208,17 +264,32 @@ public class FileWatcherService implements InitializingBean{
 
             log.info("directoryPath for pre-processing: {}", directoryPath);
 
-            List<Path> files = Files.walk(directoryPath)
+            List<Path> files = Files.walk(directoryPath).parallel()
                     .filter(Files::isRegularFile).collect(Collectors.toList());
 
             log.info("identified files: {}",files);
 
-            for(Path file : files){
+            files.forEach(new Consumer<Path>() {
+                @Override
+                public void accept(Path path) {
+                    fixedThreadPool.submit(new Callable<Boolean>() {
+                        /**
+                         * Computes a result, or throws an exception if unable to do so.
+                         *
+                         * @return computed result
+                         * @throws Exception if unable to compute a result
+                         */
+                        @Override
+                        public Boolean call() throws Exception {
 
-                log.info("about to process pending file: {}",file);
+                            log.info("about to process pending file: {}",path);
 
-                processFileData(file);
-            }
+                            return processFileData(path);
+                        }
+                    });
+                }
+            });
+
 
         }catch (Exception ex){
             log.error("Exception caught while processing pending files in directory: {}",fileDataDirectory);

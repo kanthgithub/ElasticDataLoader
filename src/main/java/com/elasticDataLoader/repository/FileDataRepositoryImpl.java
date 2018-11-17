@@ -20,6 +20,10 @@ public class FileDataRepositoryImpl implements  FileDataRepositoryCustom {
     Logger log = LoggerFactory.getLogger(FileDataRepositoryImpl.class);
 
     @Autowired
+    public FileDataRepositoryImpl(ElasticsearchTemplate elasticsearchTemplate) {
+        this.elasticsearchTemplate = elasticsearchTemplate;
+    }
+
     private ElasticsearchTemplate elasticsearchTemplate;
 
     /**
