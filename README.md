@@ -1,10 +1,122 @@
 # ElasticDataLoader
 
+Use Case:
 
-string length <=40
+Load Log File content to Elastic-Search Engine
 
-http://localhost:8081/isStringValid/string=
+Purpose:
 
-{"response" : true}
+Full-Text query to be performed to analyse text Data and generate analytics based on text match and timestamps
 
-{"response" : false}
+Tech-Stack:
+
+JDK-8 for core programming
+
+Spring-Boot for Service/Repository management and interaction with Elastic-Engine
+
+Spring-elastic-data manages all dependencies with Elastic-Search Component
+
+Mockito and Junit for Unit-Testing
+
+Embedded-Elastic-Search for Integration Testing
+
+Functional Flow:
+
+Provides an API endpoint,
+○ the caller can only send a string of up to 40 characters
+○ The API shall return a json in this format: ​{“response”: “true|false”}
+If the string appears more than 5 times in the last 24 hours, return​ {“response”: “false”}
+Else
+return ​{“response”: “true”}
+
+
+Technical Flow:
+
+The log file for the ElasticDataLoader​​ is generated with each row of data in the following format:
+
+{timestamp_in_epoch_millis}, {string}
+
+Each row records the ​timestamp_in_epoch_millis​ whereby a particular ​string​ was generated in another system.
+
+The ​same string could appeared more than 1 time​​ within the same log file and across the log files if it was being generated multiple times by the other system.
+
+Upon the zero-th minute of every hour:
+
+  A new log file that contains the data i​n the last hour​​ will be generated and be placed into the same folder
+  The file name format is string-generation-{yyyymmddhh}.log​.
+         E.g. the file with name ​string-generation-2018093016.log is a file generated at 1600 hour on 30 Sep, 2018.
+
+
+
+UML:
+
+
+
+
+
+
+Test Details:
+
+Unit Testing:
+
+Repository Tests:
+
+
+Utility Tests:
+
+
+Data Processing Tests:
+
+
+
+
+File Watcher tests:
+
+
+
+
+Integration Testing:
+
+** Pending
+
+Reason: Embedded Elastic-Engine has issues in compatibility with Spring Dependencies
+
+Followup: Develop a maven plugin which starts/stops the Elastic-Engine for each integration test
+
+
+Improvements Required:
+
+Cucumber Tests for Scenarios identified in Usecases (Blocked by Embedded Elastic Engine in-compatibility with Spring)
+
+Support for Elastic-Cluster (Multiple elastic nodes across Data-Centers)
+
+Distributed processing using AKKA - Actor based Programming:
+
+  # Build Actor-System where Supervisor / Root Guardian to spawn Child-Actors to process files in directory
+  # Sub-ordinate Actors Parse Lines and Create a sub-ordinate/Child Actor to process and load data to Elastic-Search-Engine
+
+Pros: Current Systems does parallel processing but it is limited to number of cores/processors in the Machine
+
+By Shifting to Actor based approach, it will become a distributed System and Horizontally Scalable
+
+
+Alternative Approaches:
+
+Redisson:
+
+Redis Database is a key-Value based Storage
+
+Redisson is a library/framework to achieve storage and processing in Redis in Distributed way
+
+Redisson Library is built on JDK Concurrent utilities (java.util.concurrent)
+
+Distributed Locks, Distributed
+
+
+Chronicle-IO:
+
+Off-Heap Storage mechanism
+
+Offers Mechanical Sympathy where process can be pinned to specific core of machine
+
+Distributed Heap Offers faster read/write mechanisms
