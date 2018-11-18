@@ -22,33 +22,27 @@ Full-Text query to be performed to analyse text Data and generate analytics base
 
 # Functional Flow:
 
-- Provides an API endpoint: http://localhost:<port>/isStringValid?string={string}
-- The caller can only send a string of up to 40 characters
-- The API shall return a json in this format: ​{“response”: “true|false”}
-    - If the string appears more than 5 times in the last 24 hours, return​ {“response”: “false”}
-    - Else return ​{“response”: “true”}
+- The log file for the ElasticDataLoader​​ is generated with each row of data in the following format:
+
+  - {timestamp_in_epoch_millis}, {string}
+
+- Each row records the ​timestamp_in_epoch_millis​ whereby a particular ​string​ was generated in another system.
+
+- The ​same string could appeared more than 1 time​​ within the same log file and across the log files if it was being generated multiple times by the other system.
+
+- Upon the zero-th minute of every hour:
+
+  - A new log file that contains the data i​n the last hour​​ will be generated and be placed into the same folder
+  - The file name format is string-generation-{yyyymmddhh}.log​.
+     -  E.g. the file with name ​string-generation-2018093016.log is a file generated at 1600 hour on 30 Sep, 2018.
+
+
+
 
 
 # Technical Flow:
 
-```
-The log file for the ElasticDataLoader​​ is generated with each row of data in the following format:
-
-{timestamp_in_epoch_millis}, {string}
-
-Each row records the ​timestamp_in_epoch_millis​ whereby a particular ​string​ was generated in another system.
-
-The ​same string could appeared more than 1 time​​ within the same log file and across the log files if it was being generated multiple times by the other system.
-
-Upon the zero-th minute of every hour:
-
-  A new log file that contains the data i​n the last hour​​ will be generated and be placed into the same folder
-  The file name format is string-generation-{yyyymmddhh}.log​.
-         E.g. the file with name ​string-generation-2018093016.log is a file generated at 1600 hour on 30 Sep, 2018.
-```
-
-
-UML:
+## UML:
 
 
 
