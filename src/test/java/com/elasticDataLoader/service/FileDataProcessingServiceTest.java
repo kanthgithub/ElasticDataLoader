@@ -22,7 +22,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-import static com.elasticDataLoader.common.DateTimeUtil.getCurrentTimeStamp;
 import static com.elasticDataLoader.common.FileReaderUtil.copyDataFromSourceToDestination;
 import static com.elasticDataLoader.common.StringFrequencyUtil.getStringContentFromLogString;
 import static org.junit.Assert.*;
@@ -104,17 +103,16 @@ public class FileDataProcessingServiceTest {
 
         String testDate = DateTimeUtil.getDateAsFormattedString(null,null);
 
-        int currentHourUnit = DateTimeUtil.getHourUnitFromTime(getCurrentTimeStamp());
 
-        testFile_1 = fileDataDirectory+ STRING_GENERATION +testDate+(currentHourUnit-1)+ LOG;
+        testFile_1 = fileDataDirectory+ STRING_GENERATION +testDate+"00"+ LOG;
 
         testFilePath_1 = createNewFile(testFile_1);
 
-        testFile_2 = fileDataDirectory+ STRING_GENERATION +testDate+(currentHourUnit-4)+ LOG;
+        testFile_2 = fileDataDirectory+ STRING_GENERATION +testDate+"04"+ LOG;
 
         testFilePath_2 = createNewFile(testFile_2);
 
-        testFile_3 = fileDataDirectory+ STRING_GENERATION +testDate+(currentHourUnit-10)+ LOG;
+        testFile_3 = fileDataDirectory+ STRING_GENERATION +testDate+"10"+ LOG;
 
         testFilePath_3 = createNewFile(testFile_3);
     }

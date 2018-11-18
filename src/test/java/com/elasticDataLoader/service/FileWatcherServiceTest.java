@@ -19,7 +19,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -114,9 +113,15 @@ public class FileWatcherServiceTest {
 
     private void cleanupTestFiles() throws  Exception{
 
-        //Files.deleteIfExists(Paths.get(fileDataDirectory));
+        Path directory_path = Paths.get(fileDataDirectory);
 
-        Arrays.stream(new File(fileDataDirectory).listFiles()).forEach(File::delete);
+        if(directory_path!=null && directory_path.toFile()!=null && directory_path.toFile().listFiles()!=null) {
+
+            for (File file : Paths.get(fileDataDirectory).toFile().listFiles()) {
+                if (!file.isDirectory())
+                    file.delete();
+            }
+        }
 
         if(testFilePath_1!=null) {
             testFilePath_1.toFile().deleteOnExit();
@@ -141,15 +146,16 @@ public class FileWatcherServiceTest {
 
         int currentHourUnit = DateTimeUtil.getHourUnitFromTime(getCurrentTimeStamp());
 
-        testFile_1 = fileDataDirectory+ STRING_GENERATION +testDate+(currentHourUnit-1)+ LOG;
+
+        testFile_1 = fileDataDirectory+ STRING_GENERATION +testDate+"00"+ LOG;
 
         testFilePath_1 = createNewFile(testFile_1);
 
-        testFile_2 = fileDataDirectory+ STRING_GENERATION +testDate+(currentHourUnit-4)+ LOG;
+        testFile_2 = fileDataDirectory+ STRING_GENERATION +testDate+"04"+ LOG;
 
         testFilePath_2 = createNewFile(testFile_2);
 
-        testFile_3 = fileDataDirectory+ STRING_GENERATION +testDate+(currentHourUnit-10)+ LOG;
+        testFile_3 = fileDataDirectory+ STRING_GENERATION +testDate+"10"+ LOG;
 
         testFilePath_3 = createNewFile(testFile_3);
     }
@@ -292,34 +298,6 @@ public class FileWatcherServiceTest {
         assertTrue(response);
     }
 
-    @Test
-    public void assert_Watch_For_Log_Files_With_Poison_Pill() throws  Exception{
 
-        //when
-      fixedThreadPool.submit(new Runnable() {
-          @Override
-          public void run() {
-              fileWatcherService.watchForLogFiles();
-          };
-      });
-
-        Thread.sleep(1000);
-
-        String testDate = DateTimeUtil.getDateAsFormattedString(null,null);
-
-        int currentHourUnit = DateTimeUtil.getHourUnitFromTime(getCurrentTimeStamp());
-
-        testFile_4 = fileDataDirectory+ STRING_GENERATION +testDate+(currentHourUnit-1)+ LOG;
-
-        testFilePath_4 = createNewFile(testFile_4);
-
-
-        Thread.sleep(3000);
-
-        //then
-        //fileWatcherService.POSION_PILL.set(Boolean.TRUE);
-
-        testFilePath_4.toFile().deleteOnExit();
-    }
 
 }
