@@ -8,6 +8,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class DateTimeUtil {
 
@@ -51,7 +53,7 @@ public class DateTimeUtil {
             log.info("timeString for parsing: {}",timeString);
 
 
-            localDateTime = !StringUtils.isEmpty(timeString) ? LocalDateTime.parse(timeString, formatter).atOffset(ZONE_OFFSET).toLocalDateTime() : null;
+            localDateTime = !StringUtils.isEmpty(timeString) ? LocalDateTime.parse(timeString, formatter).atOffset(ZoneOffset.ofHours(0)).toLocalDateTime() : null;
         }
 
         return localDateTime;
@@ -121,7 +123,9 @@ public class DateTimeUtil {
 
         LocalDateTime localDateTime = getDateTimeFromFileString(fileString);
 
-        return localDateTime.toEpochSecond(ZONE_OFFSET);
+        Instant instant2 = localDateTime.toInstant(ZONE_OFFSET);
+        return instant2.toEpochMilli();
+
     }
 
     /**
@@ -195,5 +199,45 @@ public class DateTimeUtil {
         Instant instant2 = pastTime.toInstant(ZONE_OFFSET);
         return instant2.toEpochMilli();
     }
+
+    /**
+     *
+     * @param deltaHours
+     * @return Long (time In Epoch Seconds of futureHour)
+     */
+    public static Long getPastTimeInEpochMillis(int deltaHours){
+
+        LocalDateTime pastTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS).plusHours(-deltaHours);
+
+        Instant instant2 = pastTime.toInstant(ZONE_OFFSET).truncatedTo(ChronoUnit.HOURS);
+        return instant2.toEpochMilli();
+    }
+
+    /**
+     *
+     * @param format
+     * @param date
+     * @return formatted DateString
+     */
+    public static String getDateAsFormattedString(String format,LocalDateTime date){
+
+        LocalDateTime dateArgument = date==null ? getCurrentTimeStamp() : date;
+
+        String formatArgument = format!=null ? format : "yyyyMMdd";
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern(formatArgument);
+
+        return dtf.format(dateArgument);
+    }
+
+
+    public static Long getRandomTimeStampInEpochMillisFromDate(){
+
+        long nextLong = ThreadLocalRandom.current().nextLong(5,1000); // For 2-digit integers, 10-99 inclusive.
+
+        return (getCurrentTimeStampInEpochMillis() - nextLong);
+    }
+
+
 
 }

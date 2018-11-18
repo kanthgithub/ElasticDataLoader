@@ -38,7 +38,7 @@ public class DateTimeUtilTest {
         //given
         String fileString = "string-generation-2018093016.log";
 
-        Long expectedTimeInEpoch = Long.valueOf(1538294400);
+        Long expectedTimeInEpoch = Long.valueOf("1538294400000");
 
         //when
         Long timeStringAsEpoch = DateTimeUtil.getTimeStampInEpochMillis(fileString);

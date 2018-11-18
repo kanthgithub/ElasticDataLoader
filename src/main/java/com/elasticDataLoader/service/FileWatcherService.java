@@ -1,6 +1,5 @@
 package com.elasticDataLoader.service;
 
-import com.elasticDataLoader.common.DateTimeUtil;
 import com.elasticDataLoader.common.FileReaderUtil;
 import com.elasticDataLoader.repository.FileDataRepository;
 import org.slf4j.Logger;
@@ -17,10 +16,11 @@ import java.nio.file.*;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static com.elasticDataLoader.common.DateTimeUtil.isAValidFileFormat;
+import static com.elasticDataLoader.common.DateTimeUtil.*;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 
 @Service
@@ -28,17 +28,27 @@ public class FileWatcherService implements InitializingBean{
 
     Logger log = LoggerFactory.getLogger(FileWatcherService.class);
 
+    //java's inbuilt watchService to watch for file arrival events
+
     private WatchService watchService;
+
+    //Repository to persist fileData in Elastic-Search engine
 
     @Autowired
     FileDataRepository fileDataRepository;
 
+    //executor service for async processing of fileData
 
     @Autowired
     ExecutorService fixedThreadPool;
 
+    //Used to force-stop the loop
+    //Useful for testing as-well
+
+    public AtomicBoolean POSION_PILL = new AtomicBoolean(false);
+
     @Value("${file.data.directory}")
-    private String fileDataDirectory;
+    String fileDataDirectory;
 
     @Autowired
     private FileDataProcessingService fileDataProcessingService;
@@ -115,9 +125,15 @@ public class FileWatcherService implements InitializingBean{
 
             WatchKey key;
 
-            while ((key = watchService.take()) != null) {
+            while (!POSION_PILL.get() && (key = watchService.take()) != null)  {
 
-                List<WatchEvent<?>> watchEvents = key.pollEvents();
+                List<WatchEvent<?>> watchEvents = null;
+
+                if(!POSION_PILL.get()) {
+                    watchEvents = key.pollEvents();
+                }else{
+                    break;
+                }
 
                 watchEvents.parallelStream().forEach(new Consumer<WatchEvent<?>>() {
                     @Override
@@ -202,7 +218,7 @@ public class FileWatcherService implements InitializingBean{
      * @param child
      * @return Boolean
      */
-    private Boolean processFileData(Path child) {
+    public Boolean processFileData(Path child) {
 
         String fileName = child.toFile().getName();
 
@@ -215,9 +231,17 @@ public class FileWatcherService implements InitializingBean{
 
                 log.info("fileName picked (for processing check) : {}", fileName);
 
-                int hourUnit = DateTimeUtil.getHourUnitFromString(fileName);
 
-                if (hourUnit <= 24) {
+
+                //get timeStampEpoch for Pasttime 24 hours
+                Long pastTimeInEpochMillis = getPastTimeInEpochMillis(24);
+
+                //get timeStampEpoch for fileString
+                Long timeStampEpochMillisFromFileString = getTimeStampInEpochMillis(fileName);
+
+                log.info("pastTimeInEpochMillis: {} , timeStampEpochMillisFromFileString: {}",pastTimeInEpochMillis,timeStampEpochMillisFromFileString);
+
+                if (timeStampEpochMillisFromFileString>=pastTimeInEpochMillis) {
 
                     log.info("fileName picked for processing: {}", fileName);
 
@@ -257,14 +281,16 @@ public class FileWatcherService implements InitializingBean{
      * Step-2: Initiate file Processing for each File
      *
      */
-    public void processAllFilesInDirectory() {
+    public Boolean processAllFilesInDirectory() {
+
+        Boolean response = Boolean.TRUE;
 
         try {
             Path directoryPath = Paths.get(fileDataDirectory);
 
             log.info("directoryPath for pre-processing: {}", directoryPath);
 
-            List<Path> files = Files.walk(directoryPath).parallel()
+            List<Path> files = Files.walk(directoryPath)
                     .filter(Files::isRegularFile).collect(Collectors.toList());
 
             log.info("identified files: {}",files);
@@ -293,7 +319,10 @@ public class FileWatcherService implements InitializingBean{
 
         }catch (Exception ex){
             log.error("Exception caught while processing pending files in directory: {}",fileDataDirectory);
+            response = Boolean.FALSE;
         }
+
+        return  response;
     }
 
 
