@@ -19,6 +19,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -53,7 +54,7 @@ public class FileWatcherServiceTest {
 
     //Declare and Initialize testData File References
 
-    private static final String fileDataDirectory = "/tmp/elastic/";
+    private static  String fileDataDirectory = "/tmp/elastic/watcher/";
 
     public static String test_Data_File_1 = "/testdata/testData_Shakespeare_Part_1.txt";
 
@@ -89,6 +90,8 @@ public class FileWatcherServiceTest {
 
         ReflectionTestUtils.setField(fileWatcherService,"fixedThreadPool",fixedThreadPool);
 
+
+
         ReflectionTestUtils.setField(fileWatcherService,"fileDataDirectory",fileDataDirectory);
 
         cleanupTestFiles();
@@ -102,14 +105,19 @@ public class FileWatcherServiceTest {
 
 
     @After
-    public void tearDown(){
+    public void tearDown() throws  Exception{
 
         cleanupTestFiles();
 
         fixedThreadPool.shutdownNow();
     }
 
-    private void cleanupTestFiles() {
+    private void cleanupTestFiles() throws  Exception{
+
+        //Files.deleteIfExists(Paths.get(fileDataDirectory));
+
+        Arrays.stream(new File(fileDataDirectory).listFiles()).forEach(File::delete);
+
         if(testFilePath_1!=null) {
             testFilePath_1.toFile().deleteOnExit();
         }
