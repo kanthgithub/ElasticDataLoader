@@ -87,6 +87,13 @@ File Watcher tests:
 Reason: Embedded Elastic-Engine has issues in compatibility with Spring Dependencies
 
 Followup: Develop a maven plugin which starts/stops the Elastic-Engine for each integration test
+
+How To: Integration testing using java test-container as mentioned in:
+
+https://gitlab.com/kanthgitlab/elasticsearch-integration-testing
+
+Source: https://www.testcontainers.org/usage/elasticsearch_container.html
+
 ```
 
 # Improvements Required:
