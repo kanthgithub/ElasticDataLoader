@@ -102,35 +102,244 @@ Full-Text query to be performed to analyse text Data and generate analytics base
                         = FileSystems.getDefault().newWatchService();
 
                     log.info("initialized FileWatcherService");
-
                 } catch (IOException e) {
                     log.error("error while initializing FileWatchService",e);
+                    throw new RuntimeException(e);
                 }
-
             }
 
-                @Override
-                public void afterPropertiesSet()  {
-
-                    fileDataRepository.deleteAll();
-
-                    processAllFilesInDirectory();
-
-                    fixedThreadPool.submit(new Runnable() {
-
-                        @Override
-                        public void run()  {
-                            watchForLogFiles();
-                        }
-                    });
-
-                }
+            @Override
+            public void afterPropertiesSet()  {
+                fileDataRepository.deleteAll();
+                processAllFilesInDirectory();
+                fixedThreadPool.submit(new Runnable() {
+                    @Override
+                    public void run()  {
+                        watchForLogFiles();
+                    }
+                });
+            }
         ```
 
-        2. Load data from log files recorded in 24 Hours duration: processAllFilesInDirectory
+        2. Initial-Startup-Load data from log files recorded in 24 Hours duration: processAllFilesInDirectory
+
+        ```java
+            /**
+             * Process all files in a configured directory
+             *
+             * This is a one-time activity which is triggered on startup
+             *
+             * Step-1: Loop(Parallel) through all files In the directory (parallel Stream for faster processing)
+             *
+             * Step-2: Initiate file Processing for each File
+             *
+             */
+            public Boolean processAllFilesInDirectory() {
+
+                Boolean response = Boolean.TRUE;
+
+                try {
+                    Path directoryPath = Paths.get(fileDataDirectory);
+
+                    log.info("directoryPath for pre-processing: {}", directoryPath);
+
+                    List<Path> files = Files.walk(directoryPath)
+                            .filter(Files::isRegularFile).collect(Collectors.toList());
+
+                    log.info("identified files: {}",files);
+
+                    files.forEach(new Consumer<Path>() {
+                        @Override
+                        public void accept(Path path) {
+                            fixedThreadPool.submit(new Callable<Boolean>() {
+                                /**
+                                 * Computes a result, or throws an exception if unable to do so.
+                                 *
+                                 * @return computed result
+                                 * @throws Exception if unable to compute a result
+                                 */
+                                @Override
+                                public Boolean call() throws Exception {
+
+                                    log.info("about to process pending file: {}",path);
+
+                                    return processFileData(path);
+                                }
+                            });
+                        }
+                    });
+                }catch (Exception ex){
+                    log.error("Exception caught while processing pending files in directory: {}",fileDataDirectory);
+                    response = Boolean.FALSE;
+                }
+
+                return  response;
+            }
+        ```
+
+
         3. poll for new File events: watchForLogFiles
+
+        ```java
+            /**
+             *
+             * process File-Watch-Event
+             *
+             * @param directoryPath
+             * @param event
+             * @return result as Boolean
+             */
+            public Boolean processWatchEvents(Path directoryPath,WatchEvent event){
+
+                log.info(
+                        "Event kind:" + event.kind()
+                                + ". File affected: " + event.context() + ".");
+
+                Boolean result = Boolean.TRUE;
+
+                if(event.kind().equals(ENTRY_CREATE)) {
+
+                    // The filename is the
+                    // context of the event.
+                    WatchEvent<Path> ev = (WatchEvent<Path>) event;
+
+                    Path filename = ev.context();
+
+                    Path child = null;
+
+                    // Verify that the new
+                    //  file is a text file.
+                    try {
+                        // Resolve the filename against the directory.
+                        // If the filename is "test" and the directory is "foo",
+                        // the resolved name is "test/foo".
+                        child = directoryPath.resolve(filename);
+
+                        processFileData(child);
+
+                    } catch (Exception x) {
+                        log.error("Error while reading File Contents: {}", filename, x);
+                        result = Boolean.FALSE;
+                    }
+                }
+
+                return result;
+            }
+        ```
+
         4. validate and extract data from watchEvents: processWatchEvents
+
+        ```java
+            /**
+             *
+             * process File-Watch-Event
+             *
+             * @param directoryPath
+             * @param event
+             * @return result as Boolean
+             */
+            public Boolean processWatchEvents(Path directoryPath,WatchEvent event){
+
+                log.info(
+                        "Event kind:" + event.kind()
+                                + ". File affected: " + event.context() + ".");
+
+                Boolean result = Boolean.TRUE;
+
+                if(event.kind().equals(ENTRY_CREATE)) {
+
+                    // The filename is the
+                    // context of the event.
+                    WatchEvent<Path> ev = (WatchEvent<Path>) event;
+
+                    Path filename = ev.context();
+
+                    Path child = null;
+
+                    // Verify that the new
+                    //  file is a text file.
+                    try {
+                        // Resolve the filename against the directory.
+                        // If the filename is "test" and the directory is "foo",
+                        // the resolved name is "test/foo".
+                        child = directoryPath.resolve(filename);
+
+                        processFileData(child);
+
+                    } catch (Exception x) {
+                        log.error("Error while reading File Contents: {}", filename, x);
+                        result = Boolean.FALSE;
+                    }
+                }
+
+                return result;
+            }
+        ```
+
+
+
         5. process parsed file Data: processFileData
+
+        ```java
+            /**
+             * Process FileData
+             *
+             * @param child
+             * @return Boolean
+             */
+            public Boolean processFileData(Path child) {
+
+                String fileName = child.toFile().getName();
+
+                Boolean isSuccessful = Boolean.TRUE;
+
+                log.info("processing FileData : {}",fileName);
+
+                try {
+                    if (isAValidFileFormat(fileName)) {
+
+                        log.info("fileName picked (for processing check) : {}", fileName);
+
+
+
+                        //get timeStampEpoch for Pasttime 24 hours
+                        Long pastTimeInEpochMillis = getPastTimeInEpochMillis(24);
+
+                        //get timeStampEpoch for fileString
+                        Long timeStampEpochMillisFromFileString = getTimeStampInEpochMillis(fileName);
+
+                        log.info("pastTimeInEpochMillis: {} , timeStampEpochMillisFromFileString: {}",pastTimeInEpochMillis,timeStampEpochMillisFromFileString);
+
+                        if (timeStampEpochMillisFromFileString>=pastTimeInEpochMillis) {
+
+                            log.info("fileName picked for processing: {}", fileName);
+
+                            List<String> lines = null;
+
+                            lines = FileReaderUtil.readFileTextToLines(child);
+
+                            log.info("lines read are: {} ", lines);
+
+                            fileDataProcessingService.processFileData(lines);
+
+                            log.info("file content as lines: {}", lines);
+                        } else {
+                            log.info("Ignored processing for file: {} - as file is older than 24 hours", fileName);
+                        }
+                    }else{
+                        log.warn("intercepted file with non-compliant fileName - ignoring fileProcessing for:{}",fileName);
+                    }
+
+                } catch(IOException ioExceptionObject){
+                    log.error("Error while reading File Contents: {}", fileName, ioExceptionObject);
+                }catch(Exception exceptionObject){
+                    log.error("Exception caught while processing file: {} in directory: {}", fileName, fileDataDirectory,exceptionObject);
+                    isSuccessful = Boolean.FALSE;
+                }
+
+                return isSuccessful;
+            }
+            ```
 
 5. FileDataProcessingService
 

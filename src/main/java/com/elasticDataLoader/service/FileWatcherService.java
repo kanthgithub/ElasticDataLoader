@@ -63,6 +63,7 @@ public class FileWatcherService implements InitializingBean{
 
         } catch (IOException e) {
             log.error("error while initializing FileWatchService",e);
+            throw new RuntimeException(e);
         }
 
     }
@@ -100,6 +101,7 @@ public class FileWatcherService implements InitializingBean{
                 fixedThreadPool.shutdown();
             } catch (IOException e) {
                log.error("error while closing FileWatchService",e);
+               throw new RuntimeException(e);
             }
         }
     }
