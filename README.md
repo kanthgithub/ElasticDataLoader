@@ -20,6 +20,48 @@ Full-Text query to be performed to analyse text Data and generate analytics base
 
 - Embedded-Elastic-Search for Integration Testing
 
+# How-To-Run:
+
+  1. check JAVA_HOME, set it to JDK-8
+  2. check MAVEN_HOME or M2_HOME , set it to maven-3
+  3. check the file directory, please set up directory path for tests:
+     ```
+     /tmp/
+     ** assign write access for application (remove restrictions if any)
+     ```
+
+  4. application will lookup for files in pre-configured directory
+     ```
+     - configured under property in application.yaml (src/main/resources)
+        file:
+          data:
+            directory: /Users/lakshmikanth/Desktop/pocket/logdata/
+
+     - change this to the directory you would prefer
+     ```
+   5. Make sure that elastic-search instance is up & running on port 9300
+      - For further details on how to install and run, refer the git project:
+          ```
+           Git Project page: https://github.com/kanthgithub/ElasticDataSearchEngine
+          ```
+   6. navigate to the project directory (if you are running from command console)
+   7. run command
+      ```
+       mvn clean install
+       ```
+   8. After successful build , start application :
+      ```
+      mvn spring-boot:run
+      ```
+   9. application will startup on random port, in case if you want to set to specific port:
+      ```
+      - open application.yaml file
+      - update property:
+        - server:
+             port: 0
+      ```
+
+
 # Functional Flow:
 
 - The log file for the ElasticDataLoader​​ is generated with each row of data in the following format:
@@ -42,7 +84,7 @@ Full-Text query to be performed to analyse text Data and generate analytics base
 
 2. Directory watch/poll is managed by: FileWatcherService.java
 
-3. ### FileWatcherService
+3. FileWatcherService
 
     - Monitors file events in the pre-configured directory
 
@@ -51,12 +93,46 @@ Full-Text query to be performed to analyse text Data and generate analytics base
     - FileWatcherService methods:
 
         1. Initialisation: init() -> java's WatcherService initialized and configured , started
+
+        ```java
+            @PostConstruct
+            public void init(){
+                try {
+                    watchService
+                        = FileSystems.getDefault().newWatchService();
+
+                    log.info("initialized FileWatcherService");
+
+                } catch (IOException e) {
+                    log.error("error while initializing FileWatchService",e);
+                }
+
+            }
+
+                @Override
+                public void afterPropertiesSet()  {
+
+                    fileDataRepository.deleteAll();
+
+                    processAllFilesInDirectory();
+
+                    fixedThreadPool.submit(new Runnable() {
+
+                        @Override
+                        public void run()  {
+                            watchForLogFiles();
+                        }
+                    });
+
+                }
+        ```
+
         2. Load data from log files recorded in 24 Hours duration: processAllFilesInDirectory
         3. poll for new File events: watchForLogFiles
         4. validate and extract data from watchEvents: processWatchEvents
         5. process parsed file Data: processFileData
 
-5. ### FileDataProcessingService
+5. FileDataProcessingService
 
     - extracts String-Content and timeStamp data from file content
     - generated FileData entity with the data extract
@@ -68,15 +144,10 @@ Full-Text query to be performed to analyse text Data and generate analytics base
         2. getFileDataFromLine -> parse file line content FileData entity
 
 ## UML:
-=======
-## Test Details:
 
-### Unit Testing:
 
-1. Repository Tests: src/test/java/com/elasticDataLoader/repository/
-2. Utility Tests:  src/test/java/com/elasticDataLoader/common/
-3. Data Processing Tests: src/test/java/com/elasticDataLoader/service/
-4. File Watcher tests: src/test/java/com/elasticDataLoader/service/
+
+
 
 ## Test Details:
 
