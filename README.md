@@ -103,6 +103,12 @@ File Watcher tests:
 
 # Alternative Approaches:
 
+# AKKA:
+
+   1. Build Actor-System where Supervisor / Root Guardian to spawn Child-Actors to process files in directory
+   2. Sub-ordinate Actors Parse Lines and Create a sub-ordinate/Child Actor to process and load data to Elastic-Search-Engine
+   3. By Shifting to Actor based approach, it will become a distributed System and Horizontally Scalable
+  
 # Redisson:
 1. Redis Database is a key-Value based Storage
 2. Redisson is a library/framework to achieve storage and processing in Redis in Distributed way
