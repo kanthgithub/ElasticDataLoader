@@ -64,10 +64,8 @@ Full-Text query to be performed to analyse text Data and generate analytics base
 
     Methods:
 
-<<<<<<< HEAD
         1. processFileData -> bulk persistence of FileData entities
         2. getFileDataFromLine -> parse file line content FileData entity
-
 
 ## UML:
 =======
@@ -76,34 +74,19 @@ Full-Text query to be performed to analyse text Data and generate analytics base
 ### Unit Testing:
 
 1. Repository Tests: src/test/java/com/elasticDataLoader/repository/
->>>>>>> 6e953726609f94b92b0fd9e72289dbf9046ddeb4
-
 2. Utility Tests:  src/test/java/com/elasticDataLoader/common/
-
-<<<<<<< HEAD
-=======
 3. Data Processing Tests: src/test/java/com/elasticDataLoader/service/
->>>>>>> 6e953726609f94b92b0fd9e72289dbf9046ddeb4
-
 4. File Watcher tests: src/test/java/com/elasticDataLoader/service/
-
-<<<<<<< HEAD
-
 
 ## Test Details:
 
 ### Unit Testing:
 
 1. Repository Tests: src/test/java/com/elasticDataLoader/repository/
-
 2. Utility Tests:  src/test/java/com/elasticDataLoader/common/
-
 3. Data Processing Tests: src/test/java/com/elasticDataLoader/service/
-
 4. File Watcher tests: src/test/java/com/elasticDataLoader/service/
 
-=======
->>>>>>> 6e953726609f94b92b0fd9e72289dbf9046ddeb4
 ### Integration Testing:
 
 ** Pending
@@ -125,7 +108,6 @@ Full-Text query to be performed to analyse text Data and generate analytics base
 
 1. Cucumber Tests for Scenarios identified in Usecases (Blocked by Embedded Elastic Engine in-compatibility with Spring)
 2. Support for Elastic-Cluster (Multiple elastic nodes across Data-Centers)
-<<<<<<< HEAD
 3. Current system is limited by single node processing
    Current Systems does parallel processing but it is limited to number of cores/processors in the Machine
 4. Distributed processing using AKKA - Actor based Programming:
@@ -136,10 +118,9 @@ Full-Text query to be performed to analyse text Data and generate analytics base
 
 4. Distributed processing using AKKA - Actor based Programming:
 
->>>>>>> 6e953726609f94b92b0fd9e72289dbf9046ddeb4
    - Build Actor-System where Supervisor / Root Guardian to spawn Child-Actors to process files in directory
    - Sub-ordinate Actors Parse Lines and Create a sub-ordinate/Child Actor to process and load data to Elastic-Search-Engine
-  -  By Shifting to Actor based approach, it will become a distributed System and Horizontally Scalable
+   -  By Shifting to Actor based approach, it will become a distributed System and Horizontally Scalable
 
 # Alternative Approaches:
 
