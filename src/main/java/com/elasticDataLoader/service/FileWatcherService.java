@@ -142,7 +142,6 @@ public class FileWatcherService implements InitializingBean{
                     public void accept(WatchEvent<?> watchEvent) {
                         fixedThreadPool.submit(new Callable<Boolean>() {
 
-
                             /**
                              * Computes a result, or throws an exception if unable to do so.
                              *
@@ -162,8 +161,6 @@ public class FileWatcherService implements InitializingBean{
         }catch (Exception ex){
             log.error("Error while reading File Contents",ex);
         }
-
-
     }
 
 
