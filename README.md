@@ -92,43 +92,29 @@ File Watcher tests:
 
 2. Support for Elastic-Cluster (Multiple elastic nodes across Data-Centers)
 
-3. Distributed processing using AKKA - Actor based Programming:
+3. Current system is limited by single node processing
+   Current Systems does parallel processing but it is limited to number of cores/processors in the Machine
 
-  # Build Actor-System where Supervisor / Root Guardian to spawn Child-Actors to process files in directory
-  # Sub-ordinate Actors Parse Lines and Create a sub-ordinate/Child Actor to process and load data to Elastic-Search-Engine
+4. Distributed processing using AKKA - Actor based Programming:
 
-  -  Pros: Current Systems does parallel processing but it is limited to number of cores/processors in the Machine
-
+   - Build Actor-System where Supervisor / Root Guardian to spawn Child-Actors to process files in directory
+   - Sub-ordinate Actors Parse Lines and Create a sub-ordinate/Child Actor to process and load data to Elastic-Search-Engine
   -  By Shifting to Actor based approach, it will become a distributed System and Horizontally Scalable
-
 
 # Alternative Approaches:
 
 # Redisson:
-
-
 1. Redis Database is a key-Value based Storage
-
 2. Redisson is a library/framework to achieve storage and processing in Redis in Distributed way
-
 3. Redisson Library is built on JDK Concurrent utilities (java.util.concurrent)
-
 4. Distributed Locks, Distributed
 
-
 # Chronicle-IO:
-
-
 1. Off-Heap Storage mechanism
-
 2. Offers Mechanical Sympathy where process can be pinned to specific core of machine
-
 3. Distributed Heap Offers faster read/write mechanisms
 
-
 # DevOps Improvements:
-
-
  - Add Docker configuration
  - enable/configure Piplelines for Continuous Build, Delivery & Deployment
  - Use AWS - RDS (Relational Database As a Service) for scalable feature
