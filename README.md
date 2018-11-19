@@ -49,25 +49,17 @@ Full-Text query to be performed to analyse text Data and generate analytics base
 
 
 
-Test Details:
+## Test Details:
 
-Unit Testing:
+# Unit Testing:
 
-Repository Tests:
+1. Repository Tests: src/test/java/com/elasticDataLoader/repository/
 
+2. Utility Tests:  src/test/java/com/elasticDataLoader/common/
 
-Utility Tests:
+3. Data Processing Tests: src/test/java/com/elasticDataLoader/service/
 
-
-Data Processing Tests:
-
-
-
-
-File Watcher tests:
-
-
-
+4. File Watcher tests: src/test/java/com/elasticDataLoader/service/
 
 # Integration Testing:
 
