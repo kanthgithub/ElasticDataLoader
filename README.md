@@ -36,11 +36,37 @@ Full-Text query to be performed to analyse text Data and generate analytics base
   - The file name format is string-generation-{yyyymmddhh}.log​.
      -  E.g. the file with name ​string-generation-2018093016.log is a file generated at 1600 hour on 30 Sep, 2018.
 
-
-
-
-
 # Technical Flow:
+
+1. Entry-Point for application: ElasticDataLoaderApplication.java
+
+2. Directory watch/poll is managed by: FileWatcherService.java
+
+3. ### FileWatcherService
+
+    - Monitors file events in the pre-configured directory
+
+    - Configuration is maintained under application.yaml (src/main/resources)
+
+    - FileWatcherService methods:
+
+        1. Initialisation: init() -> java's WatcherService initialized and configured , started
+        2. Load data from log files recorded in 24 Hours duration: processAllFilesInDirectory
+        3. poll for new File events: watchForLogFiles
+        4. validate and extract data from watchEvents: processWatchEvents
+        5. process parsed file Data: processFileData
+
+5. ### FileDataProcessingService
+
+    - extracts String-Content and timeStamp data from file content
+    - generated FileData entity with the data extract
+    - persists FileData in Elastic-Search-engine via Spring-Data library
+
+    Methods:
+
+        1. processFileData -> bulk persistence of FileData entities
+        2. getFileDataFromLine -> parse file line content FileData entity
+
 
 ## UML:
 
@@ -49,27 +75,19 @@ Full-Text query to be performed to analyse text Data and generate analytics base
 
 
 
-Test Details:
+## Test Details:
 
-Unit Testing:
+### Unit Testing:
 
-Repository Tests:
+1. Repository Tests: src/test/java/com/elasticDataLoader/repository/
 
+2. Utility Tests:  src/test/java/com/elasticDataLoader/common/
 
-Utility Tests:
+3. Data Processing Tests: src/test/java/com/elasticDataLoader/service/
 
+4. File Watcher tests: src/test/java/com/elasticDataLoader/service/
 
-Data Processing Tests:
-
-
-
-
-File Watcher tests:
-
-
-
-
-# Integration Testing:
+### Integration Testing:
 
 ** Pending
 
@@ -89,46 +107,34 @@ File Watcher tests:
 
 
 1. Cucumber Tests for Scenarios identified in Usecases (Blocked by Embedded Elastic Engine in-compatibility with Spring)
-
 2. Support for Elastic-Cluster (Multiple elastic nodes across Data-Centers)
-
-3. Distributed processing using AKKA - Actor based Programming:
-
-  # Build Actor-System where Supervisor / Root Guardian to spawn Child-Actors to process files in directory
-  # Sub-ordinate Actors Parse Lines and Create a sub-ordinate/Child Actor to process and load data to Elastic-Search-Engine
-
-  -  Pros: Current Systems does parallel processing but it is limited to number of cores/processors in the Machine
-
+3. Current system is limited by single node processing
+   Current Systems does parallel processing but it is limited to number of cores/processors in the Machine
+4. Distributed processing using AKKA - Actor based Programming:
+   - Build Actor-System where Supervisor / Root Guardian to spawn Child-Actors to process files in directory
+   - Sub-ordinate Actors Parse Lines and Create a sub-ordinate/Child Actor to process and load data to Elastic-Search-Engine
   -  By Shifting to Actor based approach, it will become a distributed System and Horizontally Scalable
-
 
 # Alternative Approaches:
 
+# AKKA:
+
+   1. Build Actor-System where Supervisor / Root Guardian to spawn Child-Actors to process files in directory
+   2. Sub-ordinate Actors Parse Lines and Create a sub-ordinate/Child Actor to process and load data to Elastic-Search-Engine
+   3. By Shifting to Actor based approach, it will become a distributed System and Horizontally Scalable
+  
 # Redisson:
-
-
 1. Redis Database is a key-Value based Storage
-
 2. Redisson is a library/framework to achieve storage and processing in Redis in Distributed way
-
 3. Redisson Library is built on JDK Concurrent utilities (java.util.concurrent)
-
 4. Distributed Locks, Distributed
 
-
 # Chronicle-IO:
-
-
 1. Off-Heap Storage mechanism
-
 2. Offers Mechanical Sympathy where process can be pinned to specific core of machine
-
 3. Distributed Heap Offers faster read/write mechanisms
 
-
 # DevOps Improvements:
-
-
  - Add Docker configuration
  - enable/configure Piplelines for Continuous Build, Delivery & Deployment
  - Use AWS - RDS (Relational Database As a Service) for scalable feature

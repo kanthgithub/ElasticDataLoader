@@ -24,6 +24,7 @@ import java.util.concurrent.Executors;
 
 import static com.elasticDataLoader.common.DateTimeUtil.getCurrentTimeStamp;
 import static com.elasticDataLoader.common.FileReaderUtil.copyDataFromSourceToDestination;
+import static com.elasticDataLoader.common.FileReaderUtil.createNewFile;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static org.junit.Assert.*;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
@@ -88,8 +89,6 @@ public class FileWatcherServiceTest {
         fixedThreadPool = Executors.newFixedThreadPool(5);
 
         ReflectionTestUtils.setField(fileWatcherService,"fixedThreadPool",fixedThreadPool);
-
-
 
         ReflectionTestUtils.setField(fileWatcherService,"fileDataDirectory",fileDataDirectory);
 
@@ -160,24 +159,6 @@ public class FileWatcherServiceTest {
         testFilePath_3 = createNewFile(testFile_3);
     }
 
-    private Path createNewFile(String fileNamePath) throws IOException {
-
-        Path testFilePath = Paths.get(fileNamePath);
-
-        File file = new File(fileNamePath);
-
-        file.deleteOnExit();
-
-        testFilePath.getParent().toFile().mkdirs();
-
-        try {
-            file.createNewFile();
-        } catch (FileAlreadyExistsException e) {
-            System.err.println("already exists: " + e.getMessage());
-        }
-
-        return testFilePath;
-    }
 
 
     /**
@@ -257,6 +238,8 @@ public class FileWatcherServiceTest {
 
         //when
         Boolean response = fileWatcherService.processAllFilesInDirectory();
+
+        Thread.sleep(1000);
 
         //then
         assertNotNull(response);

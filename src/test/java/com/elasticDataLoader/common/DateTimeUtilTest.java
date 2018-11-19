@@ -108,4 +108,48 @@ public class DateTimeUtilTest {
         assertNotNull(futureTimeInEpoch);
     }
 
+    @Test
+    public void test_get_RandomTimeStamp_In_EpochMillis_From_Date(){
+
+        //when
+        Long randomTimeStamp = getRandomTimeStampInEpochMillisFromDate();
+
+        //then
+        assertNotNull(randomTimeStamp);
+    }
+
+
+    @Test
+    public void test_get_Date_As_Formatted_String(){
+
+        //given
+        String format  = "yyyyMMdd";
+        LocalDateTime date = LocalDateTime.of(2018,11 ,18 ,00 ,00 );
+        String formatted_Date_String_Actual_Expected = "20181119";
+
+        //when
+        String formatted_Date_String_Actual = DateTimeUtil.getDateAsFormattedString(null,null);
+
+        //then
+        assertNotNull(formatted_Date_String_Actual);
+        assertEquals(formatted_Date_String_Actual_Expected,formatted_Date_String_Actual );
+    }
+
+
+    @Test
+    public void test_getPastTimeInEpochMillis(){
+
+        //given
+        int deltaHours = 10;
+
+        //when
+        Long pastTimeInEpochMillis_Actual = getPastTimeInEpochMillis(deltaHours);
+
+        //then
+        assertNotNull(pastTimeInEpochMillis_Actual);
+    }
+
+
+
+
 }

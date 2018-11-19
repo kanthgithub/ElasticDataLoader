@@ -82,17 +82,6 @@ public class DateTimeUtil {
 
     }
 
-    /**
-     *
-     * @param dateTimeString
-     * @return hour unit of time
-     */
-    public static int getHourUnitFromString(String dateTimeString){
-
-        LocalDateTime localDateTime = getDateTimeFromFileString(dateTimeString);
-
-        return localDateTime!=null ? getHourUnitFromTime(localDateTime) : 0;
-    }
 
     /**
      *
@@ -141,31 +130,6 @@ public class DateTimeUtil {
 
     /**
      *
-     * computes time difference in hours
-     *
-     * fileString contains hours and compare it with current time and get how past is that from current time
-     *
-     * Default: 0 Hours
-     *
-     * @param fileString
-     * @return Long
-     */
-    public Long getTimeDifferenceInHours(String fileString){
-
-        Long timeDeltaInMilliSeconds = getTimeDifferenceInEpochMillis(fileString);
-
-        Long hours = Long.valueOf(0);
-
-        if (timeDeltaInMilliSeconds > HOUR) {
-            hours = timeDeltaInMilliSeconds % HOUR;
-        }
-
-        return hours;
-    }
-
-
-    /**
-     *
      * @param deltaHours
      * @return Long (time In Epoch Seconds of pastHour)
      */
@@ -176,17 +140,6 @@ public class DateTimeUtil {
         return instant2.toEpochMilli();
     }
 
-    /**
-     *
-     * @param deltaSeconds
-     * @return Long (time In Epoch Seconds of pastSeconds)
-     */
-    public static Long convertPastTimeInSecondsToEpochMillis(int deltaSeconds){
-
-        LocalDateTime pastTime = LocalDateTime.now().plusHours(-1 * (deltaSeconds/3600));
-        Instant instant2 = pastTime.toInstant(ZONE_OFFSET);
-        return instant2.toEpochMilli();
-    }
 
     /**
      *
@@ -230,7 +183,11 @@ public class DateTimeUtil {
         return dtf.format(dateArgument);
     }
 
-
+    /**
+     * Random Long number as timeStampInEpochMillis
+     *
+     * @return Long
+     */
     public static Long getRandomTimeStampInEpochMillisFromDate(){
 
         long nextLong = ThreadLocalRandom.current().nextLong(5,1000); // For 2-digit integers, 10-99 inclusive.
