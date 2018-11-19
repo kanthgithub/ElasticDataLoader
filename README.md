@@ -152,12 +152,6 @@ Full-Text query to be performed to analyse text Data and generate analytics base
                         @Override
                         public void accept(Path path) {
                             fixedThreadPool.submit(new Callable<Boolean>() {
-                                /**
-                                 * Computes a result, or throws an exception if unable to do so.
-                                 *
-                                 * @return computed result
-                                 * @throws Exception if unable to compute a result
-                                 */
                                 @Override
                                 public Boolean call() throws Exception {
 
@@ -181,49 +175,60 @@ Full-Text query to be performed to analyse text Data and generate analytics base
         3. poll for new File events: watchForLogFiles
 
         ```java
-            /**
-             *
-             * process File-Watch-Event
-             *
-             * @param directoryPath
-             * @param event
-             * @return result as Boolean
+           /**
+             * watch/poll for Log files in configured directory
+             * on a NewFile event, verify and validate the fileName and timeStamp String in fileName
+             * If file is valid and has arrived in 24-hours,
+             * Initiate fileProcessing
              */
-            public Boolean processWatchEvents(Path directoryPath,WatchEvent event){
+            public void watchForLogFiles() {
 
-                log.info(
-                        "Event kind:" + event.kind()
-                                + ". File affected: " + event.context() + ".");
+                try {
+                    WatchService watchService
+                            = FileSystems.getDefault().newWatchService();
 
-                Boolean result = Boolean.TRUE;
+                    Path directoryPath = Paths.get(fileDataDirectory);
 
-                if(event.kind().equals(ENTRY_CREATE)) {
+                    log.info("directoryPath: {}",directoryPath);
 
-                    // The filename is the
-                    // context of the event.
-                    WatchEvent<Path> ev = (WatchEvent<Path>) event;
+                    directoryPath.register(watchService, ENTRY_CREATE);
 
-                    Path filename = ev.context();
+                    WatchKey key;
 
-                    Path child = null;
+                    while (!POSION_PILL.get() && (key = watchService.take()) != null)  {
 
-                    // Verify that the new
-                    //  file is a text file.
-                    try {
-                        // Resolve the filename against the directory.
-                        // If the filename is "test" and the directory is "foo",
-                        // the resolved name is "test/foo".
-                        child = directoryPath.resolve(filename);
+                        List<WatchEvent<?>> watchEvents = null;
 
-                        processFileData(child);
+                        if(!POSION_PILL.get()) {
+                            watchEvents = key.pollEvents();
+                        }else{
+                            break;
+                        }
 
-                    } catch (Exception x) {
-                        log.error("Error while reading File Contents: {}", filename, x);
-                        result = Boolean.FALSE;
+                        watchEvents.parallelStream().forEach(new Consumer<WatchEvent<?>>() {
+                            @Override
+                            public void accept(WatchEvent<?> watchEvent) {
+                                fixedThreadPool.submit(new Callable<Boolean>() {
+
+                                    /**
+                                     * Computes a result, or throws an exception if unable to do so.
+                                     *
+                                     * @return computed result
+                                     * @throws Exception if unable to compute a result
+                                     */
+                                    @Override
+                                    public Boolean call() throws Exception {
+                                        return processWatchEvents(directoryPath,watchEvent);
+                                    }
+                                });
+                            }
+                        });
+
+                        key.reset();
                     }
+                }catch (Exception ex){
+                    log.error("Error while reading File Contents",ex);
                 }
-
-                return result;
             }
         ```
 
@@ -231,7 +236,6 @@ Full-Text query to be performed to analyse text Data and generate analytics base
 
         ```java
             /**
-             *
              * process File-Watch-Event
              *
              * @param directoryPath
@@ -240,32 +244,18 @@ Full-Text query to be performed to analyse text Data and generate analytics base
              */
             public Boolean processWatchEvents(Path directoryPath,WatchEvent event){
 
-                log.info(
-                        "Event kind:" + event.kind()
-                                + ". File affected: " + event.context() + ".");
-
                 Boolean result = Boolean.TRUE;
 
                 if(event.kind().equals(ENTRY_CREATE)) {
-
-                    // The filename is the
-                    // context of the event.
+                    // The filename is the context of the event.
                     WatchEvent<Path> ev = (WatchEvent<Path>) event;
-
                     Path filename = ev.context();
-
                     Path child = null;
 
-                    // Verify that the new
-                    //  file is a text file.
+                    // Verify that the new file is a text file.
                     try {
-                        // Resolve the filename against the directory.
-                        // If the filename is "test" and the directory is "foo",
-                        // the resolved name is "test/foo".
                         child = directoryPath.resolve(filename);
-
                         processFileData(child);
-
                     } catch (Exception x) {
                         log.error("Error while reading File Contents: {}", filename, x);
                         result = Boolean.FALSE;
@@ -299,8 +289,6 @@ Full-Text query to be performed to analyse text Data and generate analytics base
                     if (isAValidFileFormat(fileName)) {
 
                         log.info("fileName picked (for processing check) : {}", fileName);
-
-
 
                         //get timeStampEpoch for Pasttime 24 hours
                         Long pastTimeInEpochMillis = getPastTimeInEpochMillis(24);
